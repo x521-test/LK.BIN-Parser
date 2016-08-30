@@ -6,15 +6,25 @@ console.log 'By F6CF and VITEK999'
 start=do (new Date).getTime
 
 headers=
-            # CMD                ARGC ARG1 ARG2 ARG3  
-            #  FF   00   00   00   03   98   81   03
-    ili_new:[0xFF,0x00,0x00,0x00,0x03,0x98,0x81,0x03]
-            #  FF   00   00   00   05   FF   98   06   04   01
-    ili_old:[0xFF,0x00,0x00,0x00,0x05,0xFF,0x98,0x06,0x04,0x01]
-            #  FF   00   00   00   03   80   09   01
-    otm_dfd:[0xFF,0x00,0x00,0x00,0x03,0x80,0x09,0x01]
-            #  C0   00   00   00   05   00   58   00   14   16
-    otm_f  :[0xC0,0x00,0x00,0x00,0x05,0x00,0x58,0x00,0x14,0x16]
+               # CMD                 ARGC ARG1 ARG2 ARG3  
+               #  FF   00   00   00   05   FF   98   06   04   01
+    ili_9806_e:[0xFF,0x00,0x00,0x00,0x05,0xFF,0x98,0x06,0x04,0x01]
+               #  FF   00   00   00   03   80   09   01
+    otm_8009_a:[0xFF,0x00,0x00,0x00,0x03,0x80,0x09,0x01]
+               #  C0   00   00   00   05   00   58   00   14   16
+    otm_f:     [0xC0,0x00,0x00,0x00,0x05,0x00,0x58,0x00,0x14,0x16]
+               #  FF   00   00   00   03   12   83   01
+    otm_1283_a:[0xFF,0x00,0x00,0x00,0x03,0x12,0x83,0x01]
+               #  FF   00   00   00   03   96   05   01
+    otm_9605_a:[0xFF,0x00,0x00,0x00,0x03,0x96,0x05,0x01]
+               #  FF   00   00   00   03   96   08  01
+    otm_9608_a:[0xFF,0x00,0x00,0x00,0x03,0x96,0x08,0x01]
+               #  B9   00   00   00   03   FF   83   94
+    hx_8394:   [0xB9,0x00,0x00,0x00,0x03,0xFF,0x83,0x94]
+               #  B9   00   00   00   03   FF   83   92
+    hx_8392:   [0xB9,0x00,0x00,0x00,0x03,0xFF,0x83,0x92]              
+               #  FF   00   00   00   03   98   81   03
+    ili_9881_c:[0xFF,0x00,0x00,0x00,0x03,0x98,0x81,0x03]
 
 class FoundHeader 
     constructor: (@name,@offset,@hex)->
@@ -70,6 +80,7 @@ fs.readFile 'lk.bin', (err,file)->
         hid++;
         out="";
         console.log "Processing header for #{header.name} (from 0x#{header.offset.toString 16} to 0x#{header.getEnd().toString 16})\n\n\n\n"
+        processStart=(new Date).getTime
         processed=0
         offset=do header.getEnd
         finish=false
@@ -91,13 +102,10 @@ fs.readFile 'lk.bin', (err,file)->
         out+= "{#{toHex header.hex[0]}, #{header.hex[4]}, {#{args.join ','}}},\n"
         while !finish||offset<file.length
             data=read 8
-            #console.log data
-            #if data[0]<id+1&&toHex data[0] != "0xff"
-            #    console.log "Finishing reading table, id(ex)=#{id}, id(fnd)=#{data[0]}"
-            #    finish=true
-            #    break
-            if (toHex data[0])=='0xff' && data[4]==0
+            if data[4]==0 #TODO: Implement a better way to detect end of table
                 out+="{REGFLAG_END_OF_TABLE, 0x00, {}}\n"
+                processEnd=do (new Date).getTime
+                console.log "Table #{hid} for #{header.name} processed in #{processEnd-processStart} ms"
                 finish=true
                 break
             id++
